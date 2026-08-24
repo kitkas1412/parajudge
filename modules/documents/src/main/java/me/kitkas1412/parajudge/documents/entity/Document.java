@@ -1,4 +1,4 @@
-package me.kitkas1412.parajudge.documents;
+package me.kitkas1412.parajudge.documents.entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.CascadeType;

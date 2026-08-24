@@ -1,4 +1,4 @@
-package me.kitkas1412.parajudge.documents;
+package me.kitkas1412.parajudge.documents.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
