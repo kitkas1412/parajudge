@@ -37,6 +37,7 @@
     <modules>
         <module>common</module>
         <module>infrastructure</module>
+        <module>modules/documents</module>
         <module>start</module>
     </modules>
 
