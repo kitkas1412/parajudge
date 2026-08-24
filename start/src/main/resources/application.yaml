@@ -2,6 +2,12 @@ spring:
   application:
     name: parajudge
 
+  servlet:
+    multipart:
+      # The consolidated Bộ luật Lao động PDF is ~2 MB; the default cap is 1 MB.
+      max-file-size: 20MB
+      max-request-size: 20MB
+
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
 
