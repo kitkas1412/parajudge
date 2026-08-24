@@ -1,11 +1,16 @@
 package me.kitkas1412.parajudge.documents.controller;
 
-import me.kitkas1412.parajudge.documents.service.parser.model.ParsedDocument;
+import me.kitkas1412.parajudge.documents.service.ingestion.DocumentIngestionService;
+import me.kitkas1412.parajudge.documents.service.ingestion.DuplicateDocumentException;
+import me.kitkas1412.parajudge.documents.service.ingestion.IngestionResult;
 import me.kitkas1412.parajudge.documents.service.ingestion.PdfIngestionService;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedDocument;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,14 +25,16 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
  * Exercises the legal-PDF parser over HTTP: parse one of the PDFs bundled in the
- * classpath, or upload one.
+ * classpath, parse an upload, or ingest either of them into the database.
  *
- * <p>Every endpoint answers with the outline by default — the full tree of the
- * 86-page code is ~600 KB — and with the whole tree on {@code ?view=full}.
+ * <p>The read-only endpoints answer with the outline by default — the full tree of
+ * the 86-page code is ~550 KB — and with the whole tree on {@code ?view=full}.
  */
 @RestController
 @RequestMapping("/api/parser")
@@ -40,9 +47,12 @@ public class PdfParserController {
 
     private static final byte[] PDF_MAGIC = {'%', 'P', 'D', 'F'};
 
-    private final PdfIngestionService ingestionService;
+    private final PdfIngestionService parserService;
+    private final DocumentIngestionService ingestionService;
 
-    public PdfParserController(PdfIngestionService ingestionService) {
+    public PdfParserController(PdfIngestionService parserService,
+                               DocumentIngestionService ingestionService) {
+        this.parserService = parserService;
         this.ingestionService = ingestionService;
     }
 
@@ -53,7 +63,7 @@ public class PdfParserController {
                 .getResources("classpath*:" + SAMPLE_DIR + "*.pdf");
         return Arrays.stream(resources)
                 .map(Resource::getFilename)
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .sorted(Comparator.naturalOrder())
                 .toList();
     }
@@ -62,6 +72,52 @@ public class PdfParserController {
     @GetMapping("/samples/{name}")
     public Object parseSample(@PathVariable String name,
                               @RequestParam(defaultValue = "outline") String view) throws IOException {
+        return render(parse(sampleContent(name), name), view);
+    }
+
+    /** {@code POST /api/parser/parse} with a {@code file} part. */
+    @PostMapping("/parse")
+    public Object parseUpload(@RequestParam("file") MultipartFile file,
+                              @RequestParam(defaultValue = "outline") String view) throws IOException {
+        return render(parse(uploadContent(file), fileName(file)), view);
+    }
+
+    /**
+     * {@code POST /api/parser/ingest} with a {@code file} part — parse the upload and
+     * write the whole tree into the database.
+     *
+     * @param replace overwrite the statute already stored under the same code
+     */
+    @PostMapping("/ingest")
+    public ResponseEntity<IngestionResult> ingestUpload(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(defaultValue = "false") boolean replace) throws IOException {
+        return ingest(parse(uploadContent(file), fileName(file)), replace);
+    }
+
+    /** {@code POST /api/parser/ingest/samples/boluatlaodong.pdf} — same, for a bundled PDF. */
+    @PostMapping("/ingest/samples/{name}")
+    public ResponseEntity<IngestionResult> ingestSample(
+            @PathVariable String name,
+            @RequestParam(defaultValue = "false") boolean replace) throws IOException {
+        return ingest(parse(sampleContent(name), name), replace);
+    }
+
+    @ExceptionHandler(DuplicateDocumentException.class)
+    public ResponseEntity<Map<String, String>> onDuplicate(DuplicateDocumentException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "code", e.getCode(),
+                "message", e.getMessage(),
+                "hint", "Gọi lại với ?replace=true để ghi đè"));
+    }
+
+    private ResponseEntity<IngestionResult> ingest(ParsedDocument parsed, boolean replace) {
+        IngestionResult result = ingestionService.ingest(parsed, replace);
+        return ResponseEntity.status(result.replacedExisting() ? HttpStatus.OK : HttpStatus.CREATED)
+                .body(result);
+    }
+
+    private byte[] sampleContent(String name) throws IOException {
         if (!SAFE_SAMPLE_NAME.matcher(name).matches()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên file không hợp lệ: " + name);
         }
@@ -69,17 +125,12 @@ public class PdfParserController {
         if (!resource.exists()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Không có file mẫu: " + name);
         }
-        byte[] content;
         try (InputStream in = resource.getInputStream()) {
-            content = in.readAllBytes();
+            return in.readAllBytes();
         }
-        return render(parse(content, name), view);
     }
 
-    /** {@code POST /api/parser/parse} with a {@code file} part. */
-    @PostMapping("/parse")
-    public Object parseUpload(@RequestParam("file") MultipartFile file,
-                              @RequestParam(defaultValue = "outline") String view) throws IOException {
+    private byte[] uploadContent(MultipartFile file) throws IOException {
         if (file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File rỗng");
         }
@@ -87,13 +138,16 @@ public class PdfParserController {
         if (!looksLikePdf(content)) {
             throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "File không phải PDF");
         }
-        String name = file.getOriginalFilename() == null ? "upload.pdf" : file.getOriginalFilename();
-        return render(parse(content, name), view);
+        return content;
+    }
+
+    private String fileName(MultipartFile file) {
+        return file.getOriginalFilename() == null ? "upload.pdf" : file.getOriginalFilename();
     }
 
     private ParsedDocument parse(byte[] content, String name) throws IOException {
         try {
-            return ingestionService.parse(content, name);
+            return parserService.parse(content, name);
         } catch (IOException e) {
             // PDFBox reports a corrupt or encrypted file as an IOException; that is the
             // caller's problem, not a server fault.

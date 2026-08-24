@@ -12,6 +12,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -36,5 +37,36 @@ public class Section {
     private List<Article> articles = new ArrayList<>();
 
     protected Section() {
+    }
+
+    public Section(Chapter chapter, String sectionNo, String title) {
+        this.chapter = chapter;
+        this.sectionNo = sectionNo;
+        this.title = title;
+        chapter.sections().add(this);
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public Chapter getChapter() {
+        return chapter;
+    }
+
+    public String getSectionNo() {
+        return sectionNo;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public List<Article> getArticles() {
+        return Collections.unmodifiableList(articles);
+    }
+
+    List<Article> articles() {
+        return articles;
     }
 }

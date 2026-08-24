@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -49,5 +50,67 @@ public class Article {
     private List<Chunk> chunks = new ArrayList<>();
 
     protected Article() {
+    }
+
+    /**
+     * @param section {@code null} for an article that hangs straight off its chapter
+     * @param sourceLaw which statute this text belongs to — the host code for its own
+     *                  articles, the amended statute for the ones Điều 219 quotes
+     */
+    public Article(Document document, Chapter chapter, Section section, Integer dieuNo, String title,
+                   String fullText, LocalDate effectiveDate, String sourceLaw) {
+        this.document = document;
+        this.chapter = chapter;
+        this.section = section;
+        this.dieuNo = dieuNo;
+        this.title = title;
+        this.fullText = fullText;
+        this.effectiveDate = effectiveDate;
+        this.sourceLaw = sourceLaw;
+        document.articles().add(this);
+        chapter.articles().add(this);
+        if (section != null) {
+            section.articles().add(this);
+        }
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public Document getDocument() {
+        return document;
+    }
+
+    public Chapter getChapter() {
+        return chapter;
+    }
+
+    public Section getSection() {
+        return section;
+    }
+
+    public Integer getDieuNo() {
+        return dieuNo;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getFullText() {
+        return fullText;
+    }
+
+    public LocalDate getEffectiveDate() {
+        return effectiveDate;
+    }
+
+    public String getSourceLaw() {
+        return sourceLaw;
+    }
+
+    public List<Chunk> getChunks() {
+        return Collections.unmodifiableList(chunks);
     }
 }

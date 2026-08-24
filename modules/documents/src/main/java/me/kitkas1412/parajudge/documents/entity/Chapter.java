@@ -1,5 +1,6 @@
 package me.kitkas1412.parajudge.documents.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,6 +13,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -32,12 +34,52 @@ public class Chapter {
     @Column(columnDefinition = "text")
     private String title;
 
-    @OneToMany(mappedBy = "chapter", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Section> sections = new ArrayList<>();
 
     @OneToMany(mappedBy = "chapter", fetch = FetchType.LAZY)
     private List<Article> articles = new ArrayList<>();
 
     protected Chapter() {
+    }
+
+    /** Registers itself with {@code document}, so the two sides cannot drift apart. */
+    public Chapter(Document document, String chapterNo, String title) {
+        this.document = document;
+        this.chapterNo = chapterNo;
+        this.title = title;
+        document.chapters().add(this);
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public Document getDocument() {
+        return document;
+    }
+
+    public String getChapterNo() {
+        return chapterNo;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public List<Section> getSections() {
+        return Collections.unmodifiableList(sections);
+    }
+
+    public List<Article> getArticles() {
+        return Collections.unmodifiableList(articles);
+    }
+
+    List<Section> sections() {
+        return sections;
+    }
+
+    List<Article> articles() {
+        return articles;
     }
 }
