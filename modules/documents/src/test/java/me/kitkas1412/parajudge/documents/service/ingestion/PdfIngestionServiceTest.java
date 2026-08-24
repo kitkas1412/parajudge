@@ -1,12 +1,11 @@
-package me.kitkas1412.parajudge.documents.parser;
+package me.kitkas1412.parajudge.documents.service.ingestion;
 
-import me.kitkas1412.parajudge.documents.parser.model.ParsedArticle;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedChapter;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedClause;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedDocument;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedPoint;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedSection;
-import me.kitkas1412.parajudge.documents.service.ingestion.PdfIngestionService;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedArticle;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedChapter;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedClause;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedDocument;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedPoint;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedSection;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -28,7 +27,7 @@ class PdfIngestionServiceTest {
     @BeforeAll
     static void parse() throws IOException, URISyntaxException {
         Path pdf = Path.of(Objects.requireNonNull(
-                PdfIngestionServiceTest.class.getResource("/boluatlaodong-trang-1.pdf")).toURI());
+                PdfIngestionServiceTest.class.getResource("/pdf/boluatlaodong-trang-1.pdf")).toURI());
         document = new PdfIngestionService().parse(pdf);
     }
 
@@ -120,7 +119,7 @@ class PdfIngestionServiceTest {
     @Test
     void writesHierarchicalJson(@TempDir Path tempDir) throws Exception {
         Path pdf = Path.of(Objects.requireNonNull(
-                getClass().getResource("/boluatlaodong-trang-1.pdf")).toURI());
+                getClass().getResource("/pdf/boluatlaodong-trang-1.pdf")).toURI());
         Path json = tempDir.resolve("out/boluatlaodong.json");
 
         new PdfIngestionService().parseToJson(pdf, json);

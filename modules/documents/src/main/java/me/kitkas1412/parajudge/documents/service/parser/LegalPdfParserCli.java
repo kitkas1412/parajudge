@@ -1,9 +1,9 @@
-package me.kitkas1412.parajudge.documents.parser;
+package me.kitkas1412.parajudge.documents.service.parser;
 
-import me.kitkas1412.parajudge.documents.parser.model.DocumentMetadata;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedChapter;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedDocument;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedSection;
+import me.kitkas1412.parajudge.documents.service.parser.model.DocumentMetadata;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedChapter;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedDocument;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedSection;
 import me.kitkas1412.parajudge.documents.service.ingestion.PdfIngestionService;
 
 import java.nio.file.Path;

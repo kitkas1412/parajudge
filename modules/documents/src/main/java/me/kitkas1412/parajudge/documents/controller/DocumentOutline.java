@@ -1,10 +1,10 @@
-package me.kitkas1412.parajudge.ingestion;
+package me.kitkas1412.parajudge.documents.controller;
 
-import me.kitkas1412.parajudge.documents.parser.model.DocumentMetadata;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedArticle;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedChapter;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedDocument;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedSection;
+import me.kitkas1412.parajudge.documents.service.parser.model.DocumentMetadata;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedArticle;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedChapter;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedDocument;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedSection;
 
 import java.util.List;
 

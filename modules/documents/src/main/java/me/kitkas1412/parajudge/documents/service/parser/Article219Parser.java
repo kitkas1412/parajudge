@@ -1,7 +1,7 @@
-package me.kitkas1412.parajudge.documents.parser;
+package me.kitkas1412.parajudge.documents.service.parser;
 
-import me.kitkas1412.parajudge.documents.parser.model.Amendment;
-import me.kitkas1412.parajudge.documents.parser.model.AmendmentItem;
+import me.kitkas1412.parajudge.documents.service.parser.model.Amendment;
+import me.kitkas1412.parajudge.documents.service.parser.model.AmendmentItem;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,5 +1,6 @@
-package me.kitkas1412.parajudge.ingestion;
+package me.kitkas1412.parajudge.documents.controller;
 
+import me.kitkas1412.parajudge.documents.service.ingestion.PdfIngestionService;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** Web layer only — the parser needs no database, so neither does this. */
 @WebMvcTest(PdfParserController.class)
-@Import(PdfParserConfig.class)
+@Import(PdfIngestionService.class)  // @WebMvcTest scans web components only
 class PdfParserControllerTest {
 
     private static final String SAMPLE = "boluatlaodong-trang-1.pdf";

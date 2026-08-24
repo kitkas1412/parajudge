@@ -1,4 +1,4 @@
-package me.kitkas1412.parajudge.documents.parser;
+package me.kitkas1412.parajudge.documents.service.parser;
 
 import java.util.List;
 import java.util.regex.Pattern;

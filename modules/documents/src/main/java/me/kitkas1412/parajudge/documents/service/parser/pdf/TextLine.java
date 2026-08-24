@@ -1,4 +1,4 @@
-package me.kitkas1412.parajudge.documents.parser.pdf;
+package me.kitkas1412.parajudge.documents.service.parser.pdf;
 
 /**
  * One visual line of a PDF page together with the layout facts the parser needs:

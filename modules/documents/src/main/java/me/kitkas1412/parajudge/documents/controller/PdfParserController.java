@@ -1,6 +1,6 @@
-package me.kitkas1412.parajudge.ingestion;
+package me.kitkas1412.parajudge.documents.controller;
 
-import me.kitkas1412.parajudge.documents.parser.model.ParsedDocument;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedDocument;
 import me.kitkas1412.parajudge.documents.service.ingestion.PdfIngestionService;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;

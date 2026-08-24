@@ -1,15 +1,15 @@
-package me.kitkas1412.parajudge.documents.parser;
+package me.kitkas1412.parajudge.documents.service.parser;
 
-import me.kitkas1412.parajudge.documents.parser.model.DocumentMetadata;
-import me.kitkas1412.parajudge.documents.parser.model.Footnote;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedArticle;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedChapter;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedClause;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedDocument;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedPoint;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedSection;
-import me.kitkas1412.parajudge.documents.parser.pdf.PageText;
-import me.kitkas1412.parajudge.documents.parser.pdf.TextLine;
+import me.kitkas1412.parajudge.documents.service.parser.model.DocumentMetadata;
+import me.kitkas1412.parajudge.documents.service.parser.model.Footnote;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedArticle;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedChapter;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedClause;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedDocument;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedPoint;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedSection;
+import me.kitkas1412.parajudge.documents.service.parser.pdf.PageText;
+import me.kitkas1412.parajudge.documents.service.parser.pdf.TextLine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -217,7 +217,7 @@ public final class LegalDocumentParser {
         if (article == null) {
             return;
         }
-        List<me.kitkas1412.parajudge.documents.parser.model.Amendment> amendments =
+        List<me.kitkas1412.parajudge.documents.service.parser.model.Amendment> amendments =
                 nestedLawParser == null ? List.of() : nestedLawParser.build();
         ParsedArticle built = new ParsedArticle(article.no, article.title, article.page,
                 article.chapterNo, article.sectionNo, List.copyOf(article.leadText),

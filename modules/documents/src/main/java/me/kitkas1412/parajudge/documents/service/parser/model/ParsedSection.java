@@ -1,4 +1,4 @@
-package me.kitkas1412.parajudge.documents.parser.model;
+package me.kitkas1412.parajudge.documents.service.parser.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

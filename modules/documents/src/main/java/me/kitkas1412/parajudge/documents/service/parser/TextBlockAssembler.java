@@ -1,7 +1,7 @@
-package me.kitkas1412.parajudge.documents.parser;
+package me.kitkas1412.parajudge.documents.service.parser;
 
-import me.kitkas1412.parajudge.documents.parser.pdf.PageText;
-import me.kitkas1412.parajudge.documents.parser.pdf.TextLine;
+import me.kitkas1412.parajudge.documents.service.parser.pdf.PageText;
+import me.kitkas1412.parajudge.documents.service.parser.pdf.TextLine;
 
 import java.util.ArrayList;
 import java.util.List;

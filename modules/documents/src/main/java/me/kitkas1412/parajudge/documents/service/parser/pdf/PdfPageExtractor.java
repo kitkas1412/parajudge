@@ -1,4 +1,4 @@
-package me.kitkas1412.parajudge.documents.parser.pdf;
+package me.kitkas1412.parajudge.documents.service.parser.pdf;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;

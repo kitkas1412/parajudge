@@ -2,12 +2,13 @@ package me.kitkas1412.parajudge.documents.service.ingestion;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import me.kitkas1412.parajudge.documents.parser.LegalDocumentParser;
-import me.kitkas1412.parajudge.documents.parser.model.DocumentMetadata;
-import me.kitkas1412.parajudge.documents.parser.model.ParsedDocument;
-import me.kitkas1412.parajudge.documents.parser.pdf.PageText;
-import me.kitkas1412.parajudge.documents.parser.pdf.PdfPageExtractor;
-import me.kitkas1412.parajudge.documents.parser.pdf.ScannedPageFilter;
+import me.kitkas1412.parajudge.documents.service.parser.LegalDocumentParser;
+import me.kitkas1412.parajudge.documents.service.parser.model.DocumentMetadata;
+import me.kitkas1412.parajudge.documents.service.parser.model.ParsedDocument;
+import me.kitkas1412.parajudge.documents.service.parser.pdf.PageText;
+import me.kitkas1412.parajudge.documents.service.parser.pdf.PdfPageExtractor;
+import me.kitkas1412.parajudge.documents.service.parser.pdf.ScannedPageFilter;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,7 +22,12 @@ import java.util.List;
  * <p>Three stages: extract page by page with PDFBox keeping font size and
  * indentation, drop the scanned pages appended at the end, then parse the
  * structure.
+ *
+ * <p>A bean for the web layer, but it holds no Spring state and needs no
+ * injection, so {@code new PdfIngestionService()} works just as well — which is
+ * how the CLI and the tests use it.
  */
+@Service
 public class PdfIngestionService {
 
     private final PdfPageExtractor extractor = new PdfPageExtractor();
