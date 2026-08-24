@@ -1,4 +1,4 @@
-package me.kitkas1412.parajudge.modules.documents;
+package me.kitkas1412.parajudge.documents;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,6 +38,7 @@ public class Chunk {
 
     private Integer tokenCount;
 
+    @Column(columnDefinition = "vector(1024)")
     @JdbcTypeCode(SqlTypes.VECTOR)
     private float[] embedding;
 

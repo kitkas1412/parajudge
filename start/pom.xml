@@ -16,6 +16,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-vector</artifactId>
+        </dependency>
+        <dependency>
             <groupId>me.kitkas1412</groupId>
             <artifactId>documents</artifactId>
             <version>${project.version}</version>
