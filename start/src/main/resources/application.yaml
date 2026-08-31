@@ -30,18 +30,38 @@ spring:
         format_sql: false
 
   ai:
+    # Ca hai starter deu tu cau hinh mot ChatModel, nen phai chi ro ben nao lam gi —
+    # neu khong ChatClient.Builder gap hai bean va app khong khoi dong duoc.
+    model:
+      chat: ollama
+      embedding: ollama
+
     ollama:
       base-url: ${OLLAMA_HOST:http://localhost:11434}
       embedding:
         model: bge-m3
+      chat:
+        options:
+          model: qwen3:8b
+        # qwen3 la model co "thinking". Voi viec doc trich doan roi thuat lai thi phan
+        # suy nghi khong them duoc gi: do thay tren cung mot cau hoi, bat thinking mat
+        # 19.5s / 341 token, tat di con 3.4s / 59 token, cau tra loi giong nhau.
+        think: false
       init:
         pull-model-strategy: when_missing
         timeout: 10m
         embedding:
           include: true
-        # Nothing here needs a chat model; without this the starter tries to pull one.
         chat:
-          include: false
+          include: true
+
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:}
+      chat:
+        options:
+          model: claude-opus-5
+          # Cau tra loi phap luat ngan; tran nay chi de chan truong hop chay dai.
+          max-tokens: 4096
 
   cache:
     type: redis
