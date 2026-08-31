@@ -96,4 +96,13 @@ public class Chunk {
     public float[] getEmbedding() {
         return embedding == null ? null : embedding.clone();
     }
+
+    /**
+     * Fills in the vector. Embedding is a second pass over rows already written — the
+     * ingest has to stay fast and must not fall over because a model server is down —
+     * so this is the one field of a chunk that changes after it is created.
+     */
+    public void assignEmbedding(float[] embedding) {
+        this.embedding = embedding.clone();
+    }
 }

@@ -29,6 +29,20 @@ spring:
         show_sql: false
         format_sql: false
 
+  ai:
+    ollama:
+      base-url: ${OLLAMA_HOST:http://localhost:11434}
+      embedding:
+        model: bge-m3
+      init:
+        pull-model-strategy: when_missing
+        timeout: 10m
+        embedding:
+          include: true
+        # Nothing here needs a chat model; without this the starter tries to pull one.
+        chat:
+          include: false
+
   cache:
     type: redis
     redis:
@@ -43,3 +57,8 @@ spring:
     port: 5672
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASS:guest}
+
+parajudge:
+  embedding:
+    # Ollama xu ly ca lo trong mot request; 16 giu payload nho ma van tan dung batching.
+    batch-size: 16

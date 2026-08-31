@@ -31,6 +31,24 @@ class ChunkingServiceTest {
                 90, "Tiền lương", "Điều 90. Tiền lương", null, sourceLaw);
     }
 
+    /**
+     * One token per word. The grouping rules are what these tests are about, so they
+     * should not move when {@link TokenEstimator}'s syllable constant is recalibrated
+     * against a new embedding model.
+     */
+    private static final TokenEstimator WORDS = new TokenEstimator() {
+        @Override
+        public int estimate(String text) {
+            return text == null || text.isBlank() ? 0 : text.strip().split("\\s+").length;
+        }
+    };
+
+    /** The context prefix these fixtures produce is 25 words, so a 120-token budget
+     *  leaves room for exactly two of the 41-word Khoản below. */
+    private ChunkingService service(int maxTokens) {
+        return new ChunkingService(maxTokens, WORDS);
+    }
+
     private ParsedArticle parsed(List<String> leadText, List<ParsedClause> clauses) {
         return new ParsedArticle(90, "Tiền lương", 1, "III", "1", leadText, clauses,
                 List.of(), "Điều 90. Tiền lương");
@@ -91,7 +109,7 @@ class ChunkingServiceTest {
         List<ParsedClause> clauses = List.of(
                 bulky("1", 40), bulky("2", 40), bulky("3", 40), bulky("4", 40));
 
-        List<Chunk> chunks = new ChunkingService(200).chunk(article(HOST_LAW),
+        List<Chunk> chunks = service(120).chunk(article(HOST_LAW),
                 parsed(List.of(), clauses));
 
         assertThat(chunks).hasSizeGreaterThan(1);
@@ -110,7 +128,7 @@ class ChunkingServiceTest {
     void repeatsAShortLeadInIntoEveryChunk() {
         String lead = "Người sử dụng lao động có các nghĩa vụ sau đây:";
 
-        List<Chunk> chunks = new ChunkingService(200).chunk(article(HOST_LAW),
+        List<Chunk> chunks = service(120).chunk(article(HOST_LAW),
                 parsed(List.of(lead), List.of(bulky("1", 40), bulky("2", 40), bulky("3", 40))));
 
         assertThat(chunks).hasSizeGreaterThan(1);
@@ -151,7 +169,7 @@ class ChunkingServiceTest {
                 new ParsedPoint("c", 1, "điểmc ".repeat(40).strip()));
         String head = "Người sử dụng lao động có quyền đơn phương chấm dứt hợp đồng lao động:";
 
-        List<Chunk> chunks = new ChunkingService(200).chunk(article(HOST_LAW), parsed(List.of(),
+        List<Chunk> chunks = service(120).chunk(article(HOST_LAW), parsed(List.of(),
                 List.of(new ParsedClause("1", 1, head, points))));
 
         assertThat(chunks).hasSizeGreaterThan(1);
@@ -207,7 +225,7 @@ class ChunkingServiceTest {
     @Test
     void hangsEveryChunkOffItsArticle() {
         Article article = article(HOST_LAW);
-        List<Chunk> chunks = new ArrayList<>(new ChunkingService(200).chunk(article,
+        List<Chunk> chunks = new ArrayList<>(service(120).chunk(article,
                 parsed(List.of(), List.of(bulky("1", 40), bulky("2", 40), bulky("3", 40)))));
 
         assertThat(article.getChunks()).containsExactlyElementsOf(chunks);

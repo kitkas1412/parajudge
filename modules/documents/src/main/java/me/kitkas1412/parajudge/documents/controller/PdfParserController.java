@@ -4,7 +4,10 @@ import me.kitkas1412.parajudge.documents.service.ingestion.DocumentIngestionServ
 import me.kitkas1412.parajudge.documents.service.ingestion.DuplicateDocumentException;
 import me.kitkas1412.parajudge.documents.service.ingestion.IngestionResult;
 import me.kitkas1412.parajudge.documents.service.ingestion.PdfIngestionService;
+import me.kitkas1412.parajudge.documents.service.embedding.EmbeddingService;
 import me.kitkas1412.parajudge.documents.service.parser.model.ParsedDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -47,13 +50,18 @@ public class PdfParserController {
 
     private static final byte[] PDF_MAGIC = {'%', 'P', 'D', 'F'};
 
+    private static final Logger log = LoggerFactory.getLogger(PdfParserController.class);
+
     private final PdfIngestionService parserService;
     private final DocumentIngestionService ingestionService;
+    private final EmbeddingService embeddingService;
 
     public PdfParserController(PdfIngestionService parserService,
-                               DocumentIngestionService ingestionService) {
+                               DocumentIngestionService ingestionService,
+                               EmbeddingService embeddingService) {
         this.parserService = parserService;
         this.ingestionService = ingestionService;
+        this.embeddingService = embeddingService;
     }
 
     /** {@code GET /api/parser/samples} — the PDFs bundled with the application. */
@@ -87,20 +95,24 @@ public class PdfParserController {
      * write the whole tree into the database.
      *
      * @param replace overwrite the statute already stored under the same code
+     * @param embed also fill in the vectors before answering; {@code false} leaves that
+     *              to {@code POST /api/embeddings} and needs no model server
      */
     @PostMapping("/ingest")
     public ResponseEntity<IngestionResult> ingestUpload(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(defaultValue = "false") boolean replace) throws IOException {
-        return ingest(parse(uploadContent(file), fileName(file)), replace);
+            @RequestParam(defaultValue = "false") boolean replace,
+            @RequestParam(defaultValue = "true") boolean embed) throws IOException {
+        return ingest(parse(uploadContent(file), fileName(file)), replace, embed);
     }
 
     /** {@code POST /api/parser/ingest/samples/boluatlaodong.pdf} — same, for a bundled PDF. */
     @PostMapping("/ingest/samples/{name}")
     public ResponseEntity<IngestionResult> ingestSample(
             @PathVariable String name,
-            @RequestParam(defaultValue = "false") boolean replace) throws IOException {
-        return ingest(parse(sampleContent(name), name), replace);
+            @RequestParam(defaultValue = "false") boolean replace,
+            @RequestParam(defaultValue = "true") boolean embed) throws IOException {
+        return ingest(parse(sampleContent(name), name), replace, embed);
     }
 
     @ExceptionHandler(DuplicateDocumentException.class)
@@ -111,8 +123,26 @@ public class PdfParserController {
                 "hint", "Gọi lại với ?replace=true để ghi đè"));
     }
 
-    private ResponseEntity<IngestionResult> ingest(ParsedDocument parsed, boolean replace) {
+    /**
+     * Ingest, then embed — in that order and outside the ingest transaction, so the
+     * minutes-long half does not hold a database connection open.
+     *
+     * <p>A failure to embed is reported, not thrown. By the time it can happen the
+     * statute is already committed, so answering 5xx would say the ingest failed when
+     * it did not; the chunks simply keep their null vectors and
+     * {@code POST /api/embeddings} picks them up whenever the model server is back.
+     */
+    private ResponseEntity<IngestionResult> ingest(ParsedDocument parsed, boolean replace,
+                                                   boolean embed) {
         IngestionResult result = ingestionService.ingest(parsed, replace);
+        if (embed) {
+            try {
+                result = result.withEmbedding(embeddingService.embed(false));
+            } catch (RuntimeException e) {
+                log.warn("Ingest {} xong nhung embedding that bai", result.code(), e);
+                result = result.withEmbeddingError(e.getMessage());
+            }
+        }
         return ResponseEntity.status(result.replacedExisting() ? HttpStatus.OK : HttpStatus.CREATED)
                 .body(result);
     }

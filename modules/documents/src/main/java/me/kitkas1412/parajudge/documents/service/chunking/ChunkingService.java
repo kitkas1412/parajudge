@@ -39,10 +39,13 @@ public class ChunkingService {
     public static final String KHOAN_GROUP = "khoan_group";
 
     /**
-     * Multilingual embedding models generally take 512 tokens; the slack absorbs the
-     * gap between {@link TokenEstimator} and the model's real tokenizer.
+     * A real token count now that {@link TokenEstimator} has been calibrated, not a
+     * guess with slack in it. Kept below 512 so the corpus stays portable to models
+     * with that ceiling, and set so chunks come out the size they were when retrieval
+     * was first checked against this corpus — the 1.6-per-syllable estimate that
+     * produced them was over-counting by about a fifth.
      */
-    public static final int DEFAULT_MAX_TOKENS = 500;
+    public static final int DEFAULT_MAX_TOKENS = 400;
 
     /**
      * A short lead-in ("Người sử dụng lao động có các nghĩa vụ sau đây:") is what makes
