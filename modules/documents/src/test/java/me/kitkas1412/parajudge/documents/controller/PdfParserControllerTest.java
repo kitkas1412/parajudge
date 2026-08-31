@@ -119,20 +119,21 @@ class PdfParserControllerTest {
     @Test
     void ingestsASampleAndReportsWhatWasWritten() throws Exception {
         when(ingestionService.ingest(any(), eq(false))).thenReturn(new IngestionResult(
-                7, "45/2019/QH14", "Bộ luật Lao động", 3, 1, 24, 10, List.of(), false));
+                7, "45/2019/QH14", "Bộ luật Lao động", 3, 1, 24, 31, 10, List.of(), false));
 
         mockMvc.perform(post("/api/parser/ingest/samples/{name}", SAMPLE))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.documentId").value(7))
                 .andExpect(jsonPath("$.code").value("45/2019/QH14"))
                 .andExpect(jsonPath("$.articles").value(24))
+                .andExpect(jsonPath("$.chunks").value(31))
                 .andExpect(jsonPath("$.replacedExisting").value(false));
     }
 
     @Test
     void ingestsAnUpload() throws Exception {
         when(ingestionService.ingest(any(), eq(false))).thenReturn(new IngestionResult(
-                1, "45/2019/QH14", "Bộ luật Lao động", 3, 1, 24, 10, List.of(), false));
+                1, "45/2019/QH14", "Bộ luật Lao động", 3, 1, 24, 31, 10, List.of(), false));
         MockMultipartFile upload =
                 new MockMultipartFile("file", SAMPLE, MediaType.APPLICATION_PDF_VALUE, samplePdf());
 
@@ -155,7 +156,7 @@ class PdfParserControllerTest {
     @Test
     void answers200WhenItReplacedInsteadOfCreated() throws Exception {
         when(ingestionService.ingest(any(), eq(true))).thenReturn(new IngestionResult(
-                8, "45/2019/QH14", "Bộ luật Lao động", 3, 1, 24, 10, List.of(), true));
+                8, "45/2019/QH14", "Bộ luật Lao động", 3, 1, 24, 31, 10, List.of(), true));
 
         mockMvc.perform(post("/api/parser/ingest/samples/{name}", SAMPLE).param("replace", "true"))
                 .andExpect(status().isOk())

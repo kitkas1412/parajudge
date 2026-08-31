@@ -8,6 +8,7 @@ import me.kitkas1412.parajudge.documents.entity.Article;
 import me.kitkas1412.parajudge.documents.entity.Chapter;
 import me.kitkas1412.parajudge.documents.entity.Document;
 import me.kitkas1412.parajudge.documents.entity.Section;
+import me.kitkas1412.parajudge.documents.service.chunking.ChunkingService;
 import me.kitkas1412.parajudge.documents.service.parser.model.Amendment;
 import me.kitkas1412.parajudge.documents.service.parser.model.AmendmentItem;
 import me.kitkas1412.parajudge.documents.service.parser.model.ParsedArticle;
@@ -23,18 +24,20 @@ import java.util.List;
  * {@code Document → Chapter → Section → Article}.
  *
  * <p>The parse tree goes one level deeper than the schema does: it also carries
- * Khoản and Điểm, which have no table. They survive inside
- * {@code articles.full_text}, so nothing is lost — {@code chunks} is where that
- * detail is meant to be split up again, and that needs a chunking strategy and an
- * embedding model, so this mapper leaves it alone.
+ * Khoản and Điểm, which have no table of their own. They survive whole inside
+ * {@code articles.full_text}, and {@link ChunkingService} splits them back out into
+ * {@code chunks} as this mapper walks the tree — which is the one place the entity
+ * and the parse node for the same article are both in hand.
  *
  * <p>Saving the returned {@code Document} saves the whole graph: chapters and
- * articles cascade from it, sections cascade from their chapter.
+ * articles cascade from it, sections cascade from their chapter, chunks from their
+ * article.
  */
 @Component
 public class DocumentEntityMapper {
 
     private final PreambleParser preambleParser = new PreambleParser();
+    private final ChunkingService chunkingService = new ChunkingService();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Document toEntity(ParsedDocument parsed) {
@@ -66,8 +69,9 @@ public class DocumentEntityMapper {
     }
 
     private void toEntity(Document document, Chapter chapter, Section section, ParsedArticle parsed) {
-        new Article(document, chapter, section, parsed.no(), title(parsed), parsed.fullText(),
-                null, document.getCode());
+        Article article = new Article(document, chapter, section, parsed.no(), title(parsed),
+                parsed.fullText(), null, document.getCode());
+        chunkingService.chunk(article, parsed);
         amendedStatutes(document, chapter, parsed);
     }
 
@@ -83,12 +87,13 @@ public class DocumentEntityMapper {
                 if (item.targetArticleNo() == null || item.quotedText().isEmpty()) {
                     continue;
                 }
-                new Article(document, chapter, null, item.targetArticleNo(),
+                Article article = new Article(document, chapter, null, item.targetArticleNo(),
                         item.targetArticleTitle() == null
                                 ? "Điều " + item.targetArticleNo()
                                 : item.targetArticleTitle(),
                         String.join("\n", item.quotedText()),
                         null, amendment.targetLaw());
+                chunkingService.chunk(article, item);
             }
         }
     }

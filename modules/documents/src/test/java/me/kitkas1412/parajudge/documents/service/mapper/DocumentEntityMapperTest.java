@@ -2,8 +2,10 @@ package me.kitkas1412.parajudge.documents.service.mapper;
 
 import me.kitkas1412.parajudge.documents.entity.Article;
 import me.kitkas1412.parajudge.documents.entity.Chapter;
+import me.kitkas1412.parajudge.documents.entity.Chunk;
 import me.kitkas1412.parajudge.documents.entity.Document;
 import me.kitkas1412.parajudge.documents.entity.Section;
+import me.kitkas1412.parajudge.documents.service.chunking.ChunkingService;
 import me.kitkas1412.parajudge.documents.service.ingestion.PdfIngestionService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -127,5 +129,59 @@ class DocumentEntityMapperTest {
         assertThat(document.getArticles()).hasSize(219 + 3);
         assertThat(articlesOf(SOCIAL_INSURANCE_LAW)).extracting(Article::getDieuNo)
                 .containsExactlyInAnyOrder(54, 55);
+    }
+
+    @Test
+    void chunksEveryArticleWithinTheEmbeddingBudget() {
+        List<Chunk> chunks = chunks();
+
+        assertThat(document.getArticles()).allSatisfy(a ->
+                assertThat(a.getChunks()).as("Điều %s", a.getDieuNo()).isNotEmpty());
+        assertThat(chunks).extracting(Chunk::getChunkType)
+                .containsOnly(ChunkingService.FULL_DIEU, ChunkingService.KHOAN_GROUP);
+        assertThat(chunks).allSatisfy(c ->
+                assertThat(c.getTokenCount()).isBetween(1, ChunkingService.DEFAULT_MAX_TOKENS));
+        assertThat(chunks).allSatisfy(c -> assertThat(c.getKhoanRange())
+                .matches(range -> ChunkingService.FULL_DIEU.equals(c.getChunkType())
+                        ? range == null
+                        : range != null));
+    }
+
+    @Test
+    void putsTheParentContextAtTheHeadOfEveryChunk() {
+        assertThat(chunksOf(90)).allSatisfy(c -> assertThat(c.getContent()).startsWith(
+                "Bộ luật Lao động — Chương VI: TIỀN LƯƠNG — Điều 90. Tiền lương\n"));
+
+        // A statute quoted by Điều 219 is labelled with that statute, not with the
+        // chapter of the Labour Code it happens to be printed under.
+        assertThat(chunksOf(54)).anySatisfy(c -> assertThat(c.getContent())
+                .startsWith(SOCIAL_INSURANCE_LAW + " — Điều 54. Điều kiện hưởng lương hưu\n"));
+    }
+
+    @Test
+    void leavesDieu219PointingAtTheAmendedStatutesInsteadOfRepeatingThem() {
+        List<Chunk> chunks = chunksOf(219);
+
+        assertThat(chunks).hasSize(1);
+        assertThat(chunks.get(0).getContent())
+                .contains("Sửa đổi, bổ sung một số điều của Luật Bảo hiểm xã hội")
+                // The quoted text of Điều 54 lives on its own article, not in here.
+                .doesNotContain("Điều kiện về tuổi hưởng lương hưu");
+    }
+
+    @Test
+    void recordsWhichDieuAChunkRefersTo() {
+        // Điều 169 khoản 2 is the retirement age the pension rules hang off.
+        assertThat(chunksOf(54)).anySatisfy(c -> assertThat(c.getCrossRefs()).contains(169));
+        assertThat(chunks()).allSatisfy(c -> assertThat(c.getCrossRefs())
+                .doesNotContain(c.getArticle().getDieuNo()));
+    }
+
+    private static List<Chunk> chunks() {
+        return document.getArticles().stream().flatMap(a -> a.getChunks().stream()).toList();
+    }
+
+    private static List<Chunk> chunksOf(int dieuNo) {
+        return chunks().stream().filter(c -> c.getArticle().getDieuNo() == dieuNo).toList();
     }
 }

@@ -2,6 +2,7 @@ package me.kitkas1412.parajudge.persistence;
 
 import me.kitkas1412.parajudge.documents.repository.ArticleRepository;
 import me.kitkas1412.parajudge.documents.repository.ChapterRepository;
+import me.kitkas1412.parajudge.documents.repository.ChunkRepository;
 import me.kitkas1412.parajudge.documents.repository.DocumentRepository;
 import me.kitkas1412.parajudge.documents.repository.SectionRepository;
 import me.kitkas1412.parajudge.documents.service.ingestion.DocumentIngestionService;
@@ -58,6 +59,8 @@ class DocumentIngestionServiceTest {
     private SectionRepository sections;
     @Autowired
     private ArticleRepository articles;
+    @Autowired
+    private ChunkRepository chunks;
 
     private ParsedDocument parsed;
 
@@ -80,6 +83,7 @@ class DocumentIngestionServiceTest {
         assertThat(result.chapters()).isEqualTo(17);
         assertThat(result.sections()).isEqualTo(24);
         assertThat(result.articles()).isEqualTo(222);
+        assertThat(result.chunks()).isEqualTo(270);
         assertThat(result.parsedPages()).isEqualTo(85);
         assertThat(result.droppedScanPages()).containsExactly(86);
         assertThat(result.replacedExisting()).isFalse();
@@ -109,7 +113,25 @@ class DocumentIngestionServiceTest {
         assertThat(chapters.count()).isEqualTo(17);
         assertThat(sections.count()).isEqualTo(24);
         assertThat(articles.count()).isEqualTo(222);
+        assertThat(chunks.count()).isEqualTo(270);
         assertThat(articles.findAll()).allSatisfy(
                 a -> assertThat(a.getDocument().getId()).isEqualTo(second.documentId()));
+    }
+
+    @Test
+    void storesTheChunksPostgresWillBeSearchedOn() {
+        ingestion.ingest(parsed, false);
+
+        assertThat(chunks.count()).isEqualTo(270);
+        assertThat(chunks.findAll()).allSatisfy(chunk -> {
+            assertThat(chunk.getContent()).isNotBlank();
+            assertThat(chunk.getTokenCount()).isPositive();
+            assertThat(chunk.getArticle().getId()).isNotNull();
+            // vector(1024) stays empty until the embedding pass runs.
+            assertThat(chunk.getEmbedding()).isNull();
+        });
+        // int[] round-trips through Postgres, which is what the GIN index is built on.
+        assertThat(chunks.findAll()).anySatisfy(
+                chunk -> assertThat(chunk.getCrossRefs()).contains(169));
     }
 }

@@ -44,4 +44,56 @@ public class Chunk {
 
     protected Chunk() {
     }
+
+    /**
+     * @param chunkType {@code full_dieu} when the whole Điều fits in one chunk,
+     *                  {@code khoan_group} when it had to be split
+     * @param khoanRange the Khoản this chunk covers ({@code "1"}, {@code "3-5"}),
+     *                   {@code null} for a whole Điều
+     * @param content the text with its parent context prefixed, which is what gets embedded
+     * @param crossRefs the {@code dieu_no} this chunk points at, for expanding a retrieval hit
+     */
+    public Chunk(Article article, String chunkType, String khoanRange, String content,
+                 Integer[] crossRefs, Integer tokenCount) {
+        this.article = article;
+        this.chunkType = chunkType;
+        this.khoanRange = khoanRange;
+        this.content = content;
+        this.crossRefs = crossRefs.clone();
+        this.tokenCount = tokenCount;
+        article.chunks().add(this);
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public Article getArticle() {
+        return article;
+    }
+
+    public String getChunkType() {
+        return chunkType;
+    }
+
+    public String getKhoanRange() {
+        return khoanRange;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public Integer[] getCrossRefs() {
+        return crossRefs == null ? new Integer[0] : crossRefs.clone();
+    }
+
+    public Integer getTokenCount() {
+        return tokenCount;
+    }
+
+    /** {@code null} until the embedding pass has run over this chunk. */
+    public float[] getEmbedding() {
+        return embedding == null ? null : embedding.clone();
+    }
 }

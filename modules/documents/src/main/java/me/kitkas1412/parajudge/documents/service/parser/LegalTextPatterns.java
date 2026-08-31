@@ -36,6 +36,13 @@ public final class LegalTextPatterns {
     public static final Pattern TARGET_LAW = Pattern.compile(
             "(?:của\\s+)?((?:Bộ luật|Luật|Pháp lệnh|Nghị quyết)\\s+[^,;:]*?số\\s+\\d+/\\d{4}/[A-ZĐ0-9]+)");
 
+    /**
+     * {@code quy định tại khoản 2 Điều 169} — a mention of another Điều from inside body
+     * text. Unlike {@link #DIEU} this is deliberately unanchored and needs no trailing
+     * dot: it is looking for references, not headings.
+     */
+    public static final Pattern ARTICLE_REFERENCE = Pattern.compile("Điều\\s+(\\d{1,4})");
+
     /** {@code Bộ luật Lao động số 45/2019/QH14} — the code of the document itself. */
     public static final Pattern DOCUMENT_CODE = Pattern.compile("\\b(\\d{1,3}/\\d{4}/[A-ZĐ]{2,}\\d*)\\b");
 

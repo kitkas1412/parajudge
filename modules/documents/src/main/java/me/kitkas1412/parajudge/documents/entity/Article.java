@@ -1,5 +1,6 @@
 package me.kitkas1412.parajudge.documents.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -46,7 +47,7 @@ public class Article {
     @Column(columnDefinition = "text")
     private String sourceLaw;
 
-    @OneToMany(mappedBy = "article", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Chunk> chunks = new ArrayList<>();
 
     protected Article() {
@@ -112,5 +113,10 @@ public class Article {
 
     public List<Chunk> getChunks() {
         return Collections.unmodifiableList(chunks);
+    }
+
+    /** Both sides are wired by the child constructor; see {@link Chunk#Chunk}. */
+    List<Chunk> chunks() {
+        return chunks;
     }
 }
